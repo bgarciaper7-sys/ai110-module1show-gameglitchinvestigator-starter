@@ -4,21 +4,29 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 
 ## 1. What was broken when you started?
 
-- What did the game look like the first time you ran it?
-- List at least two concrete bugs you noticed at the start  
-  (for example: "the hints were backwards").
+While investigating the AI-generated guessing game, I identified several problems involving game state, comparison logic, and input validation.
 
-**Bug Reproduction Log**
+**Bug 1: Incorrect high/low hints**
 
-Document at least 3 bugs you found. Add rows as needed.
+The game gives directions that contradict the comparison result. For example, when the secret is 6 and the guess is 50, the game says to go higher instead of lower. In `app.py`, the `check_guess()` function returns incorrect directional messages.
 
-| Input | Expected Behavior | Actual Behavior | Console Output / Error |
-|-------|-------------------|-----------------|------------------------|
-| | | | |
-| | | | |
-| | | | |
+**Bug 2: Invalid guesses are accepted**
 
----
+The game advertises a range of 1–100, but values such as 0 and 102 appear in the guess history. The `parse_guess()` function converts input into integers without checking whether the result is within the allowed range.
+
+**Bug 3: Attempts start at the wrong value**
+
+The initial session state sets `attempts` to 1 instead of 0. On Normal difficulty, this can cause the game to display seven attempts remaining before the player has submitted a guess.
+
+### Bug Reproduction Logs
+
+| Input Used / Trigger | Expected Behavior | Actual Behavior | Console Error / Output | Suspected Code Location |
+|---|---|---|---|---|
+| Secret 6, guess 50 | Display "Go LOWER!" | Displays "Go HIGHER!" | No console error observed | `app.py`, `check_guess()`, lines 37–40 |
+| Guess 102 | Reject a number outside the range | Guess is recorded in history | No console error observed | `app.py`, `parse_guess()`, lines 14–29 |
+| Initial game load on Normal | Show 8 attempts remaining | Shows 7 attempts remaining | No console error observed | `app.py`, lines 95–96 |
+
+Additional issues identified during code inspection include inconsistent number types during comparisons, incomplete New Game resets, and attempts being counted before input validation.
 
 ## 2. How did you use AI as a teammate?
 
