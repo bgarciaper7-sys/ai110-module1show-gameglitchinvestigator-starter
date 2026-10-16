@@ -1,59 +1,40 @@
 # 💭 Reflection: Game Glitch Investigator
 
-Answer each question in 3 to 5 sentences. Be specific and honest about what actually happened while you worked. This is about your process, not trying to sound perfect.
-
 ## 1. What was broken when you started?
 
-While investigating the AI-generated guessing game, I identified several problems involving game state, comparison logic, and input validation.
+When I first ran the guessing game, it looked like a normal Streamlit application, but I quickly realized that several things were not working correctly. When the secret number was 6 and I guessed 50, the game incorrectly told me to go higher instead of lower. I also discovered that guesses outside the allowed range, such as 0 and 102, were accepted instead of rejected. Another issue was that the attempts counter started at 1 before I had even made a guess, and later I discovered that changing difficulty or starting a new game did not reset everything correctly.
 
-**Bug 1: Incorrect high/low hints**
+### Bug Reproduction Log
 
-The game gives directions that contradict the comparison result. For example, when the secret is 6 and the guess is 50, the game says to go higher instead of lower. In `app.py`, the `check_guess()` function returns incorrect directional messages.
+| Input Used / Trigger | Expected Behavior | Actual Behavior | Console Error / Output |
+|---|---|---|---|
+| Secret = 6, guess = 50 | Display "Go LOWER!" | Displayed "Go HIGHER!" | No console error |
+| Guess = 102 on Normal | Reject the guess because the maximum is 100 | Accepted the guess and added it to history | No console error |
+| Guess = 0 on Normal | Reject the guess because the minimum is 1 | Accepted the invalid guess | No console error |
+| Initial game load on Normal | Show 8 attempts remaining | Showed 7 attempts remaining | No console error |
+| Switch to Easy with secret = 73 | Generate a secret between 1 and 20 | Kept secret 73 and displayed the old range | No console error |
+| New Game after winning or losing | Reset all game values | Score, history, or game status were not reset | No console error |
 
-**Bug 2: Invalid guesses are accepted**
-
-The game advertises a range of 1–100, but values such as 0 and 102 appear in the guess history. The `parse_guess()` function converts input into integers without checking whether the result is within the allowed range.
-
-**Bug 3: Attempts start at the wrong value**
-
-The initial session state sets `attempts` to 1 instead of 0. On Normal difficulty, this can cause the game to display seven attempts remaining before the player has submitted a guess.
-
-### Bug Reproduction Logs
-
-| Input Used / Trigger | Expected Behavior | Actual Behavior | Console Error / Output | Suspected Code Location |
-|---|---|---|---|---|
-| Secret 6, guess 50 | Display "Go LOWER!" | Displays "Go HIGHER!" | No console error observed | `app.py`, `check_guess()`, lines 37–40 |
-| Guess 102 | Reject a number outside the range | Guess is recorded in history | No console error observed | `app.py`, `parse_guess()`, lines 14–29 |
-| Initial game load on Normal | Show 8 attempts remaining | Shows 7 attempts remaining | No console error observed | `app.py`, lines 95–96 |
-
-Additional issues identified during code inspection include inconsistent number types during comparisons, incomplete New Game resets, and attempts being counted before input validation.
+---
 
 ## 2. How did you use AI as a teammate?
 
-- Which AI tools did you use on this project (for example: ChatGPT, Gemini, Copilot)?
-- Give one example of an AI suggestion that was correct (including what the AI suggested and how you verified the result).
-- Give one example of an AI suggestion you did not accept as written (including what the AI suggested, why you rejected or changed it, and how you verified your version). It does not have to be a suggestion that was wrong: over-engineered, out of scope, harder to read, or a poor fit for this codebase all count.
+I used ChatGPT to help me understand the debugging process and Claude in VS Code to investigate the code, suggest changes, and create tests. One helpful suggestion was to move `parse_guess()` into `logic_utils.py` and validate inputs before updating the game state, which I verified by entering 102 and confirming that it was rejected without using an attempt. I did not immediately accept Claude's suggestion to change `update_score()` while we were fixing the difficulty and New Game bugs because I wanted to focus on one problem at a time. Instead, I asked Claude to explain the scoring logic separately before approving the change, and I verified the final version using automated tests and actual gameplay.
 
 ---
 
 ## 3. Debugging and testing your fixes
 
-- How did you decide whether a bug was really fixed?
-- Describe at least one test you ran (manual or using pytest)  
-  and what it showed you about your code.
-- Did AI help you design or understand any tests? How?
+I learned to verify a fix by reproducing the original problem and checking whether the game now behaved as expected. Claude helped generate pytest and Streamlit AppTest tests, while ChatGPT helped me understand what the tests were checking. At one point, the tests passed but the browser still showed a `TypeError` because an older Streamlit server was running, so I had to restart it and test again. By the end, all 107 automated tests passed, and I manually tested difficulty changes, input validation, game resets, and scoring. I also confirmed that two incorrect high guesses reduced the score from 0 to -5 to -10 instead of rewarding the second guess.
 
 ---
 
 ## 4. What did you learn about Streamlit and state?
 
-- How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
+I learned that Streamlit reruns the Python script whenever someone interacts with the application, such as submitting a guess or changing the difficulty. Session state is what allows the game to remember values like the secret number, attempts, score, and guess history between those reruns. Without managing session state correctly, the game can keep outdated information or fail to reset when starting over. I also learned that the order in which Streamlit displays information matters, because the attempts-remaining message originally showed the previous count until the next interaction.
 
 ---
 
 ## 5. Looking ahead: your developer habits
 
-- What is one habit or strategy from this project that you want to reuse in future labs or projects?
-  - This could be a testing habit, a prompting strategy, or a way you used Git.
-- What is one thing you would do differently next time you work with AI on a coding task?
-- In one or two sentences, describe how this project changed the way you think about AI generated code.
+One habit I want to continue is testing bugs myself instead of assuming that AI-generated code works correctly. Next time, I want to practice reading Python functions and understanding error messages before asking AI to fix them. I also want to continue asking AI to explain proposed changes before allowing it to modify my files. This project changed how I think about AI-generated code because I realized that even when AI provides a solution, I still need to understand, review, and test it before trusting the results.
