@@ -35,7 +35,8 @@ def parse_guess(raw: str, low: int, high: int):
 
     return True, value, None
 
-
+# FIX: Refactored and corrected the high/low hint logic with AI assistance.
+# Manually verified the behavior and confirmed it with pytest.
 def check_guess(guess, secret):
     """
     Compare guess to secret and return (outcome, message).
